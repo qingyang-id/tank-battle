@@ -43,9 +43,5 @@ $ node www
 <a href="http://localhost:5000/" target="_blank">http://localhost:5000/</a>
 
 
-试玩之后，用浏览器打开 
+试玩之后，如果给我一颗star，不胜感激
 <a href="https://github.com/yqsailor/tank-battle" target="_blank">https://github.com/yqsailor/tank-battle</a>
-
-点击此处，给我一颗星<br>
-
-![thanks](res/thanks.png)
