@@ -41,9 +41,6 @@ class Conn {
             }
           }, 1500);
         }
-      },
-      setID: (data) => {
-        this.id = data[0];
       }
     };
     this.parentFn = parentFn;
@@ -59,15 +56,7 @@ class Conn {
   }
 
   send(data) {
-    this.conn.send(Buffer.from(JSON.stringify(data)));
-  }
-
-  getAId() {
-    return this.idList.shift();
-  }
-
-  freeAId(id) {
-    this.idList.push(id);
+    this.mainMessage(data.shift(), data);
   }
 
   init(conn) {
@@ -128,10 +117,6 @@ class Conn {
     console.log("update", ucount, acount);
   }
 
-  userMessage(id, data) {
-    this.noticeMain([2, id, data]);
-  }
-
   noticeUser(uid, data) {
     if (this.players[uid])
       this.players[uid].conn.send(Buffer.from(data));
@@ -159,7 +144,6 @@ class Conn {
   }
 
   noticeMain(data) {
-    console.log('\n\n\nnotice main data ', data, [this.id].concat(data), typeof data, typeof [this.id].concat(data), Array.isArray([this.id].concat(data)));
     this.parentFn([this.id].concat(data));
   }
 }

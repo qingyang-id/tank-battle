@@ -1,6 +1,5 @@
 ﻿//var ws = require("nodejs-websocket");
 var ws = require("ws").Server;
-var Buffer = require('buffer').Buffer;
 var childProcess = require('child_process');
 var IdManage = require('./idmanage.js');
 var Conn = require('./conn.js');
@@ -57,7 +56,6 @@ function noticeUser(uid, data) {
 
 //通知一些用户
 function noticeSomeUser(idstr, data) {
-  console.log('notice some user ', [3, idstr, data])
   for (var i = 0; i < connects.length; i++) {
     if (connects[i].conn) connects[i].conn.send([3, idstr, data]);
   }
@@ -81,7 +79,6 @@ function noticeAllConn(title, data) {
 
 //通知连接组件
 function noticeConn(cid, title, data) {
-  console.log('\n\n\n\ncid ', cid, title, data, [title].concat(data));
   if (connects[cid].conn) connects[cid].conn.send([title].concat(data));
 }
 
@@ -92,7 +89,6 @@ function noticeReferee(idstr, data) {
 
 //裁判的消息
 function refereeMessage(data) {
-  console.log('\n\n\n referee parent message ', data, typeof data);
   refEvent[data[0]](data.substr(1));
 }
 
@@ -102,7 +98,6 @@ function connMessage(cid, data) {
   //console.log(data);
   if (type == 2) {    //用户的消息
     var ename = data[1][0];
-    console.log('\n\n\nename', ename, data[0], data[1].substr(1));
     if (userEvent[ename]) {
       userEvent[ename](data[0], data[1].substr(1));
     }
