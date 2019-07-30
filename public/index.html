@@ -1,16 +1,20 @@
-﻿{% extends 'layout.html' %}
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <meta charset="utf-8"/>
-  <title>{% block title %}{{title}}{% endblock %}</title>
-  {% block headcss %}
-  <link rel="stylesheet" href="/css/tanke.css"/>
-  {% endblock %}
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta charset="utf-8" />
+  <title>坦克大战</title>
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <meta name="description" content="" />
+  <meta name="keywords" content="" />
+  <meta name="author" content="yqsailor" />
+  <meta name="copyright" content="jijianxia.com" />
+  <link rel="stylesheet" href="/css/layout.css" />
+  <link rel="stylesheet" href="/css/tank.css"/>
 </head>
 <body class="">
-{% block content %}{% spaceless %}
 <div id="js-main" class="main">
 
   <div id="js-game" class="game-container">
@@ -89,7 +93,7 @@
   </div>
   <div id="js-main-page" class="main-page" v-bind:class="{'hide':sysstate==2}">
     <div class="first-input-page">
-      <div class="logo-div">{{bgtitle}}</div>
+      <div class="logo-div">坦克大作战</div>
       <div class="input-cont">
         <input id="ipt-name" type="text" maxlength="30" v-on:keyup.13="play()" v-model="userName"
                placeholder="pick a name"/>
@@ -107,7 +111,7 @@
         </div>
         <div id="js-chat-room" class="chat-room">
           <div id="js-chat-msgs" class="chat-msgs">
-            <p v-for="prow in chatRoom.msg" class="chat-row" data-uid="{{prow.i}}">
+            <p v-for="prow in chatRoom.msg" class="chat-row" :uid="prow.i">
               <span class="chat-time">[{{prow.t}}]</span>
               <span class="chat-user" v-bind:class="{'chat-sys':(prow.u==1)}">{{prow.n}}</span>
               <span class="chat-txt">{{prow.v}}</span>
@@ -128,26 +132,11 @@
   </div>
 </div>
 
-{% endspaceless %}{% endblock %}
 <!-- 这里在页面中会被忽略 这样写只为启用visualstudio的代码提示功能 -->
-<script src="/public/js/jquery-1.11.1.min.js"></script>
-<script src="/public/js/vue.js"></script>
-<script src="/public/js/pixi.js"></script>
-{% block footjs %}
 <script src="/js/jquery-1.11.1.min.js"></script>
 <script src="/js/vue.js"></script>
 <script src="/js/pixi.min.js"></script>
-{% jsmin "-oa /js/tank.js -b -ua" %}
 <script>
-  // jsmin 的参数  -o 表示导出到/js/tank.js  ， -b 表示使用闭包   ，  -u 表示不压缩
-
-
-  // 在开发状态下
-  // 建议在app.js中找到这行
-  // “//swig.setDefaults({ cache: false });”
-  // 取消注释   从而禁用缓存
-
-
   var lang = navigator.language || navigator.userLanguage,
     lang = lang.substr(0, 2)
     , ua = navigator.userAgent.toLowerCase()
@@ -164,7 +153,6 @@
   0 <= ua.indexOf("chrome") && (is_safari || is_firefox || (is_chrome = true));
 
 
-  //copycode(wsserver/tools.js)
   var tools = {};
   tools.deg2vector = function () {
     var degreeToRadiansFactor = Math.PI / 180;
@@ -226,10 +214,6 @@
   }
 
   tools.clone = clone;
-  /*copycode
-  module.exports = tools;
-  */
-  //endcopycode
 
   var Blob = window.Blob || window.webkitBlob;
 
@@ -348,7 +332,6 @@
 
 <script>
 
-  //copycode(wsserver/guns.js)
   var GUNS = {
     "0": {
       "n": "土炮",
@@ -476,12 +459,6 @@
     }
   }
 
-  //GUNS['0'] = GUNS['5'];
-
-  /*copycode
-  module.exports = GUNS;
-  */
-  //endcopycode
 
   (function () {
     var guns_div = $("#js-guns-div");
@@ -502,7 +479,6 @@
   })();
 
 
-  //copycode(wsserver/wuti.js)
   var WUTIS = {
     "t_p": 0,    //掉落金币的道具
     "t_t": 1,    //掉落加速加血的道具
@@ -583,12 +559,7 @@
       }
     }
   })();
-  /*copycode
-  module.exports = WUTIS;
-  */
-  //endcopycode
 
-  //copycode(wsserver/jiangpin.js)
   var JIANGPINS = {
     "type_g": 0,    //金币
     "type_v": 1,      //加速
@@ -627,10 +598,6 @@
       radius: 20,
     }
   };
-  /*copycode
-  module.exports = JIANGPINS;
-  */
-  //endcopycode
 
   var textures_path = "p/";
   var textures_houzhui = ".png";
@@ -752,9 +719,9 @@
         if (window["localStorage"]) {
           localStorage.setItem("username", pageData.userName);
         }
-        if (_hmt) {
-          _hmt.push(['_trackEvent', 'shouye', 'play', 'play', 1]);
-        }
+        // if (_hmt) {
+        //   _hmt.push(['_trackEvent', 'shouye', 'play', 'play', 1]);
+        // }
       },
     }
   });
@@ -879,14 +846,6 @@
   });
 
 
-  //copycode(wsserver/public.js)
-
-  /*copycode
-  var tools = require('./tools.js');
-  var GUNS = require('./guns.js');
-  var WUTIS = require('./wuti.js');
-  var JIANGPINS = require('./jiangpin.js');
-  */
   var main, ids, jp_ids, wt_ids;
   var game_env = 0;   //0：客户端   1：main    2:referee
   var game_is_ai = false;
@@ -901,10 +860,6 @@
   var ai_m_tank, ai_m_wuti, ai_m_jiangpin;
   var ai_min_tk, ai_min_wt, ai_min_jp;
 
-  /*copycode
-  //is_client = false;
-  //is_server = true;
-  */
   var my_id = "---";
   var my_tank = { x: 0, y: 0, kill: 0 };
   var tankes = {};    //坦克列表
@@ -3051,9 +3006,5 @@
 
 
 </script>
-
-
-{% endjsmin %}
-{% endblock %}
 </body>
 </html>

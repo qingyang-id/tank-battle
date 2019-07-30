@@ -4,7 +4,7 @@ var WUTIS = require('./wuti.js');
 var JIANGPINS = require('./jiangpin.js');
 
 var main, ids, jp_ids, wt_ids;
-var game_env = 0;   // 0：客户端   1：main    2:referee
+var game_env = 0;   //0：客户端   1：main    2:referee
 var game_is_ai = false;
 var game_width = 5000, game_height = 5000;
 var dft_speed = 12, dft_add_speed = 8;
