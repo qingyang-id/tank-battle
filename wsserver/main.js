@@ -1,20 +1,15 @@
-﻿//var ws = require("nodejs-websocket");
-var ws = require("ws").Server;
-var childProcess = require('child_process');
+﻿var childProcess = require('child_process');
 var IdManage = require('./idmanage.js');
 var Conn = require('./conn.js');
 
 console.log("main.js   pid:", process.pid);
-
 var fs = require('fs');
 var publicfile = fs.readFileSync("wsserver/public.js").toString();
 eval(publicfile.toString());
 
 game_env = 1;
 
-var connects = [
-  { port: 8008, usernum: 0 , hasnew: false },
-];
+var connect = { port: 8008 };
 
 let referee = childProcess.fork('./wsserver/referee.js');
 referee.on('message', function (data) {
@@ -27,20 +22,8 @@ function connectMessage(data) {
   connMessage(data.shift(), data);
 }
 
-function webrequest(req, rsp) {
-  rsp.writeHead(200, { 'Content-Type': 'text/plain' });
-  rsp.end('Hello!\n');
-}
 
-var webserver = require('http').createServer(webrequest);
-
-
-var server = new ws({ server: webserver });
-server.on("connection", function (conn) {
-  connects[0].conn = new Conn(conn, 0, connectMessage);
-});
-
-webserver.listen(8008);
+connect.conn = new Conn(connect.port, 0, connectMessage);
 
 
 var ids = new IdManage(1000, "tk");
@@ -49,37 +32,29 @@ var wt_ids = new IdManage(3000, "wt");
 
 //通知一个用户
 function noticeUser(uid, data) {
-  for (var i = 0; i < connects.length; i++) {
-    if (connects[i].conn) connects[i].conn.send([2, uid, data]);
-  }
+  if (connect.conn) connect.conn.send([2, uid, data]);
 }
 
 //通知一些用户
 function noticeSomeUser(idstr, data) {
-  for (var i = 0; i < connects.length; i++) {
-    if (connects[i].conn) connects[i].conn.send([3, idstr, data]);
-  }
+  if (connect.conn) connect.conn.send([3, idstr, data]);
   referee.send(data);
 }
 
 //通知所有用户
 function noticeAllUser(data) {
-  for (var i = 0; i < connects.length; i++) {
-    if (connects[i].conn) connects[i].conn.send([4, data]);
-  }
+  if (connect.conn) connect.conn.send([4, data]);
   referee.send(data);
 }
 
 //通知所有连接组件
 function noticeAllConn(title, data) {
-  for (var i = 0; i < connects.length; i++) {
-    if (connects[i].conn) connects[i].conn.send([title, data]);
-  }
+  if (connect.conn) connect.conn.send([title, data]);
 }
 
 //通知连接组件
 function noticeConn(cid, title, data) {
-  if (connects[cid].conn) connects[cid].conn.send([title].concat(data));
+  if (connect.conn) connect.conn.send([title].concat(data));
 }
 
 //通知裁判
@@ -96,18 +71,21 @@ function refereeMessage(data) {
 function connMessage(cid, data) {
   var type = data.shift();
   //console.log(data);
-  if (type == 2) {    //用户的消息
+  if (type == 2) {    // 用户的消息
+    console.log('\n\n\n用户消息  ', cid, data)
     var ename = data[1][0];
     if (userEvent[ename]) {
       userEvent[ename](data[0], data[1].substr(1));
     }
-  } else if (type == 1) { //用户建立连接
+  } else if (type == 1) { // 用户建立连接
+    console.log('\n\n\n用户建立连接  ', cid, data)
     if (data[0].startsWith("conn")) {
       newUser(cid, data);
     }
-  } else if (type == 3) { //用户断开连接
+  } else if (type == 3) { // 用户断开连接
+    console.log('\n\n\n用户断开连接  ', cid, data)
     var freeid = data[0];
-    var fj = tankes[freeid];
+    var fj = tanks[freeid];
     var jpstr;
     if (fj) {
       fj.gold = fj.gold >> 1;
@@ -120,16 +98,8 @@ function connMessage(cid, data) {
         }, 100);
       }
       Tank.remove(freeid);
-      //noticeAllUser("d" + freeid);
       noticeSomeUser(fj.fj_tk + fj.id, "d" + freeid);
     }
-    //if (jpstr) {
-    //    setTimeout(function () {
-    //        noticeAllUser("g" + jpstr);
-    //    }, 100);
-    //}
-  } else if (type == 4) {
-    connects[cid].usernum = data[0];
   }
 }
 
@@ -137,8 +107,9 @@ function connMessage(cid, data) {
 function newUser(cid, data) {
   if (data[1][0] == "a") {
     var nid = ids.getOne();
-    console.log("nid " , nid.length, nid.charCodeAt(0), nid.charCodeAt(1));
+    // 通知用户连接成功
     noticeConn(cid, 5, [data[0], nid]);
+    // 添加坦克
     var tk = Tank.add({
       id: nid,
       x: (Math.random() * (game_width << 1) - game_width) * 0.95,
@@ -147,6 +118,8 @@ function newUser(cid, data) {
     });
     tk.add_fj();
     //noticeAllUser("c" + tk.getZipStr());
+    // 通知房间其它用户新坦克加入
+    console.log('通知房间其它用户新坦克加入', tk.fj_tk, tk.id, "c" + tk.getZipStr());
     noticeSomeUser(tk.fj_tk + tk.id, "c" + tk.getZipStr());
   }
 }
@@ -186,7 +159,7 @@ var refEvent = {
     //noticeAllUser("j" + data);
     var fid = data[1];
     var h = data.charCodeAt(2);
-    var fj = tankes[fid];
+    var fj = tanks[fid];
     if (fj) {
       fj.h = h;
       noticeSomeUser(fj.fj_tk + fj.id, "j" + data);
@@ -196,10 +169,10 @@ var refEvent = {
     //noticeAllUser("k" + data);
     var fid = data[1];
     var kid = data[0];
-    if (tankes[kid]) {
-      tankes[kid].kill++;
+    if (tanks[kid]) {
+      tanks[kid].kill++;
     }
-    var fj = tankes[fid];
+    var fj = tanks[fid];
     if (fj) {
       fj.h = 0;
       fj.a = false;
@@ -246,7 +219,7 @@ var refEvent = {
   "x": function (data) {   //排行榜信息
     var tk, rank = [], di;
     for (var i = 0; i < data.length; i++) {
-      tk = tankes[data[i]];
+      tk = tanks[data[i]];
       if (tk) {
         tk.idx = i + 1;
         noticeUser(data[i], "x" + String.fromCharCode(tk.idx));
@@ -299,14 +272,14 @@ var userEvent = {
   },
   d: function (uid, data) {   //用户购买炮台
     var gid = data.charCodeAt(0);
-    var tk = tankes[uid];
+    var tk = tanks[uid];
     if (tk && tk.gun != gid && GUNS[gid]) {
       tk.gun = gid;
       noticeSomeUser(tk.fj_tk + tk.id, "t" + uid + data[0] + String.fromCharCode(tk.gold));
     }
   },
   e: function (uid, data) {    //表示停火
-    var tk = tankes[uid];
+    var tk = tanks[uid];
     if (tk && tk.f) {
       tk.f = false;
       //noticeAllUser("e" + uid);
@@ -314,7 +287,7 @@ var userEvent = {
     }
   },
   f: function (uid, data) {    //表示开火
-    var tk = tankes[uid];
+    var tk = tanks[uid];
     if (tk && !tk.f) {
       // 此处应该做时间限制处理
       tk.f = true;
@@ -325,7 +298,7 @@ var userEvent = {
   },
   g: function (uid, data) {    //用户查询附近的奖品信息
     var str = "";
-    var tk = tankes[uid], jp;
+    var tk = tanks[uid], jp;
     if (tk) {
       if (tk.fj_jp) {
         for (var i = 0; i < tk.fj_jp.length; i++) {
@@ -343,14 +316,14 @@ var userEvent = {
   },
   n: function (uid, data) {    //查询用户的名字信息
     if (data) {
-      var fj = tankes[data];
+      var fj = tanks[data];
       if (fj) {
         noticeUser(uid, "n" + fj.id + fj.n);
       }
     }
   },
   p: function (uid, data) {    //用户发送的炮塔变换方向事件
-    var tk = tankes[uid];
+    var tk = tanks[uid];
     if (tk) {
       tk.p = data.charCodeAt(0);
       //noticeAllUser("p" + uid + data[0]);
@@ -360,14 +333,14 @@ var userEvent = {
   r: function (uid, data) {    //用户发送的移动方向事件
     var mtstr = Tank.getMoveStr(uid, data.charCodeAt(0));
     if (mtstr) {
-      var tk = tankes[uid];
+      var tk = tanks[uid];
       //noticeAllUser("m" + mtstr);
       noticeSomeUser(tk.fj_tk + tk.id, "m" + mtstr);
     }
   },
   w: function (uid, data) {    //用户查询附近的物品信息
     var str = "";
-    var tk = tankes[uid], wt;
+    var tk = tanks[uid], wt;
     if (tk) {
       if (tk.fj_wt) {
         for (var i = 0; i < tk.fj_wt.length; i++) {
@@ -385,7 +358,7 @@ var userEvent = {
   },
 
   "C": function (uid, data) {  //获取附近物品id
-    var tk = tankes[uid];
+    var tk = tanks[uid];
     if (tk) {
       var str = tk.fj_wt;
       str = String.fromCharCode(str.length) + str;
@@ -422,8 +395,8 @@ var userEvent = {
 
 function send_move_to(now_time) {
   var mtstr, tk;
-  for (var ti in tankes) {
-    var tk = tankes[ti];
+  for (var ti in tanks) {
+    var tk = tanks[ti];
     if (tk.v > dft_speed && tk.v_t < now_time) {
       tk.v = dft_speed;
       mtstr = tk.getMoveStr();

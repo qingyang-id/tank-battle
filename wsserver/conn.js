@@ -1,7 +1,7 @@
-﻿var Buffer = require('buffer').Buffer;
+﻿const WebSocket = require("ws").Server;
 
 class Conn {
-  constructor(conn, id, parentFn) {
+  constructor(port, id, parentFn) {
     this.idList = new Array(500);
     for (let i = 0; i < 500; i++) {
       this.idList[i] = String.fromCharCode(i);
@@ -9,7 +9,7 @@ class Conn {
     this.players = {};
     this.waitplayer = {};
     this.t_count = 0; // 临时ID计数
-    this.id = id;
+    this.id = id; // 房间ID
     this.mainEvents = {
       2: (data) => {
         this.noticeUser(data[0], data[1]);
@@ -25,7 +25,7 @@ class Conn {
         if (obj) {
           delete this.waitplayer[data[0]];
           var id = data[1];
-          obj.conn.send(Buffer.from('b' + id));
+          obj.ws.send(Buffer.from('b' + id));
           obj.id = id;
           obj.iswait = false;
           this.players[id] = obj;
@@ -36,7 +36,7 @@ class Conn {
         if (this.players[fid]) {
           setTimeout(() => {
             if (this.players[fid]) {
-              this.players[fid].conn.close();
+              this.players[fid].ws.close();
               delete this.players[fid];
             }
           }, 1500);
@@ -44,98 +44,75 @@ class Conn {
       }
     };
     this.parentFn = parentFn;
-    this.conn = conn;
-    this.thisobj = {
-      id: "conn" + this.id + "_" + (this.t_count++),
-      iswait: true,   //是等待中的用户
-      conn,
-      name: null,
-      active: true,
-    };
-    this.init(conn);
+    this.wss = new WebSocket({ port });
+    this.wss.on("connection", ws => this.init.call(this, ws));
   }
 
   send(data) {
     this.mainMessage(data.shift(), data);
   }
 
-  init(conn) {
-    const headers = conn.headers;
-    console.log("conn headers ", headers);
+  init(ws) {
+    const playerInfo = {
+      id: "conn" + this.id + "_" + (this.t_count++),
+      iswait: true,   // 是等待中的用户
+      name: null,
+      active: true,
+      ws
+    };
+    const headers = ws.headers;
+    console.log("ws headers ", headers);
     this.t_count > 10000000 ? this.t_count = 0 : 0;
-    conn.on("close", (code, reason) => {
-      console.log('\nconn close ', code, reason);
-      //console.log("conn_close", host);
-      this.thisobj.active = false;
+    ws.on("close", (code, reason) => {
+      console.log('\nws close ', code, reason);
+      //console.log("ws_close", host);
+      playerInfo.active = false;
     });
-    conn.on("error", (err) => {
-      console.log('\nconn error ', err);
+    ws.on("error", (err) => {
+      console.log('\nws error ', err);
     });
-    conn.on("message", (str) => {
-      console.log('conn message ', str, typeof str);
+    ws.on("message", (str) => {
       if (Buffer.isBuffer(str)) str = Buffer.from(str).toString();
-      console.log('\nconn message ', str);
-      if (str == "2") {
-        conn.send("3");
-      } else if (str === 'join') {
-        conn.send(Buffer.from("a"));
+      console.log('\nws message ', str);
+      if (str === 'join') {
+        ws.send(Buffer.from("a"));
       } else {
         call(str);
       }
     });
-
     const call = (data) => {
-      if (this.thisobj.iswait) {
-        console.log('is wait ......', this.thisobj.iswait, data, [1, this.thisobj.id, data.substring(0, 20) || ""]);
+      if (playerInfo.iswait) {
+        console.log('is wait ......', playerInfo.iswait, data, [1, playerInfo.id, data.substring(0, 20) || ""]);
         data = data.substring(0, 20) || "";
-        this.noticeMain([1, this.thisobj.id, data]);
+        this.noticeMain([1, playerInfo.id, data]);
       } else {
-        console.log('is wait ......', this.thisobj.iswait, [2, this.thisobj.id, data]);
-        this.noticeMain([2, this.thisobj.id, data]);
+        console.log('is not wait ......', playerInfo.iswait, [2, playerInfo.id, data]);
+        this.noticeMain([2, playerInfo.id, data]);
       }
     };
-
-    this.waitplayer[this.thisobj.id] = this.thisobj;
-
-    setInterval(() => {
-      this.update();
-    }, 1500);
-  }
-
-  update() {
-    var ucount = 0, acount = 0;
-    for (var pi in this.players) {
-      if (this.players[pi].active) {
-        ucount++;
-      } else {
-        acount++;
-        this.noticeMain([3, pi]);
-        delete this.players[pi];
-      }
-    }
-    this.noticeMain([4, ucount]);
-    console.log("update", ucount, acount);
+    this.waitplayer[playerInfo.id] = playerInfo;
   }
 
   noticeUser(uid, data) {
     if (this.players[uid])
-      this.players[uid].conn.send(Buffer.from(data));
+      this.players[uid].ws.send(Buffer.from(data));
   }
 
   noticeSomeUser(idstr, data) {
+    console.log('\n\n\nidstr  ', idstr, '  data', data);
     data = Buffer.from(data);
     var p;
     for (var i = 0; i < idstr.length; i++) {
       p = this.players[idstr[i]];
       if (p)
-        p.conn.send(data);
+        p.ws.send(data);
     }
   }
 
   noticeAllUser(data) {
     data = Buffer.from(data);
     for (var pi in this.players) {
-      this.players[pi].conn.send(data);
+      this.players[pi].ws.send(data);
     }
   }
 

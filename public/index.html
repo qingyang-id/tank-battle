@@ -22,10 +22,6 @@
       <div id="js-canvas-cont">
       </div>
       <div id="js-head-bar" class="head-bar">
-        <div id="js-head-icon" class="head-hdicon">
-          <img id="js-head-body" class="head-img-body" src="/p/tk1.png"/>
-          <img id="js-head-pao" src="/p/gp0.png"/>
-        </div>
         <div class="head-info">
           <div class="head-health">
             <div id="js-head-health"></div>
@@ -73,22 +69,6 @@
             <span>YOU</span> <a>killed</a> <span>AGSFS</span>
         </div>-->
       </div>
-      <div id="js-guns" class="game-guns-d">
-        <div class="close-d"></div>
-        <div class="game-guns-ct">
-          <img class="game_guns-linebg" src="/p/bgl.png"/>
-          <div id="js-guns-div" class="game-guns-list">
-            <div class="g-item">
-              <div class="g-item-body">
-                <img class="js-p-img"/>
-              </div>
-              <div class="g-item-price">$0</div>
-              <div class="g-item-name"></div>
-              <div class="g-item-buy">购买</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
   <div id="js-main-page" class="main-page" v-bind:class="{'hide':sysstate==2}">
@@ -102,32 +82,6 @@
           <div id="js-connecting" class="conn-ing" v-bind:class="{'show':sysstate==1}"></div>
         </div>
       </div>
-    </div>
-    <div class="other-page">
-      {% raw %}
-      <div id="js-chat-wrap" class="chat-wrap">
-        <div class="chat-title">
-          <span>CHATROOM</span>
-        </div>
-        <div id="js-chat-room" class="chat-room">
-          <div id="js-chat-msgs" class="chat-msgs">
-            <p v-for="prow in chatRoom.msg" class="chat-row" :uid="prow.i">
-              <span class="chat-time">[{{prow.t}}]</span>
-              <span class="chat-user" v-bind:class="{'chat-sys':(prow.u==1)}">{{prow.n}}</span>
-              <span class="chat-txt">{{prow.v}}</span>
-            </p>
-          </div>
-          <div class="chat-iptd">
-            <div class="chat-ipt-ct">
-              <input id="js-chat-input" type="text" v-model="chatRoom.ipt" v-on:keyup.13="send($event)" maxlength="100"
-                     class="chat-ipt"/>
-            </div>
-            <div class="chat-send" v-on:click="send()">send</div>
-          </div>
-        </div>
-      </div>
-      {% endraw %}
-      <div style="text-align:center;line-height:500px;display:none;">一切都在开发之中。</div>
     </div>
   </div>
 </div>
@@ -170,7 +124,7 @@
       if (x == 0 && y == 0) {
         return 360;
       }
-      rad = Math.atan(y / x);
+      const rad = Math.atan(y / x);
       var result = rad * radianToDegreesFactor;
       if (x < 0) {
         result += 180;
@@ -321,8 +275,8 @@
       connect(defaulturl);
     };
     setInterval(function () {
-       if (isonline && ws.send) {
-           ws.send("2");
+       if (isonline && ws.ping) {
+           ws.ping();
        }
     }, 10000);
   }).bind(socket)(socket);
@@ -459,26 +413,6 @@
     }
   }
 
-
-  (function () {
-    var guns_div = $("#js-guns-div");
-    var g_templt = guns_div.html();
-    guns_div.empty();
-
-    for (var gi in GUNS) {
-      var gn = GUNS[gi];
-      var gnode = $(g_templt);
-      gnode[0].id = "g_" + gi;
-      gnode.find(".js-p-img").attr("src", "/p/" + gn.p + ".png");
-      gnode.find(".g-item-name").text(gn.n);
-      gnode.find(".g-item-price").text("$" + gn.pr);
-      gnode.css({ top: gn.tp, left: gn.lf });
-      guns_div.append(gnode);
-    }
-
-  })();
-
-
   var WUTIS = {
     "t_p": 0,    //掉落金币的道具
     "t_t": 1,    //掉落加速加血的道具
@@ -605,7 +539,8 @@
   var texture_bg_1_2 = textures_path + "bg_1_2.png";
   var textures = {
     //飞机
-    "fj0": "tk1",
+    // "fj0": "tk1",
+    "fj0": "tank",
     "fj0_p": "gp0",
 
     //炮塔
@@ -683,11 +618,6 @@
   }
 
 
-  var js_chat_msg_cont = document.getElementById("js-chat-msgs");
-  var js_chat_wrap = $("#js-chat-wrap");
-  var js_chat_room = $("#js-chat-room");
-  var js_container = $("#js-container");
-  var js_chat_input = $("#js-chat-input");
   var js_is_pc = true;
   (function () {
     var sUserAgent = navigator.userAgent.toLowerCase();
@@ -746,11 +676,7 @@
     gui_top_msg("<span>" + a + "</span><a>killed</a><span>" + b + "</span>");
   }
 
-  var js_head_bar = $("#js-head-bar");
   var js_game_fulscr = $("#js-game-fulscr");
-  var js_head_icon = $("#js-head-icon");
-  var js_guns = $("#js-guns");
-  var js_head_body = $("#js-head-body");
   var js_head_pao = $("#js-head-pao");
   var js_head_h = $("#js-head-health");
   var js_head_gold = $("#js-gold-num");
@@ -802,17 +728,6 @@
     }
   }
 
-  js_head_icon.click(function () {
-    js_guns.addClass("show");
-  });
-  $(".close-d").click(function () {
-    js_guns.removeClass("show");
-  });
-  js_guns.on("click", ".g-item-buy", function (e) {
-    var id = $(this).parent().attr("id").replace("g_", "");
-    Tank.ibg(id);
-    js_guns.removeClass("show");
-  });
 
   function launchFullScreen(element) {
     if (element.requestFullscreen) {
@@ -862,7 +777,7 @@
 
   var my_id = "---";
   var my_tank = { x: 0, y: 0, kill: 0 };
-  var tankes = {};    //坦克列表
+  var tanks = {};    //坦克列表
   var zidans = [];    //子弹数组
   var wutis = {};     //物体列表
   var jiangpins = {};   //战利品列表
@@ -961,8 +876,8 @@
   };
   JiangPin.prototype.add_fj = function () {
     var tk, fj_ds = Tank.fj_dswj;
-    for (var ti in tankes) {
-      tk = tankes[ti];
+    for (var ti in tanks) {
+      tk = tanks[ti];
       if (Math.abs(tk.x - this.x) < fj_ds && Math.abs(tk.y - this.y) < fj_ds) {
         tk.fj_jp += this.id;
         this.fj_tk += ti;
@@ -1065,7 +980,7 @@
   };
   JiangPin.getEffectStr = function (jid, uid) {
     var jp = jiangpins[jid];
-    var fj = tankes[uid];
+    var fj = tanks[uid];
     if (fj) {
       var rtstr = "0";
       if (jp.t == 0) {    //金币
@@ -1094,7 +1009,7 @@
     var jid = str[0];
     var t = str[1];
     var fjid = str[2];
-    var fj = tankes[fjid];
+    var fj = tanks[fjid];
     if (t == "0") {
       if (fj) {
         fj.gold = str.charCodeAt(3);
@@ -1186,7 +1101,7 @@
       if (game_env == 2) {
         if (jp.fj_tk) {
           for (k = 0; k < jp.fj_tk.length; k++) {
-            tk = tankes[jp.fj_tk[k]];
+            tk = tanks[jp.fj_tk[k]];
             if (!tk || !tk.a || tk.h <= 0) {
               continue;
             }
@@ -1197,8 +1112,8 @@
             }
           }
         }
-        //for (var fi in tankes) {
-        //    fj = tankes[fi];
+        //for (var fi in tanks) {
+        //    fj = tanks[fi];
         //    if (fj.h <= 0 || !fj.a) {
         //        continue;
         //    }
@@ -1283,8 +1198,8 @@
   };
   WuTi.prototype.add_fj = function () {
     var tk, fj_ds = Tank.fj_dswj;
-    for (var ti in tankes) {
-      tk = tankes[ti];
+    for (var ti in tanks) {
+      tk = tanks[ti];
       if (Math.abs(tk.x - this.x) < fj_ds && Math.abs(tk.y - this.y) < fj_ds) {
         tk.fj_wt += this.id;
         this.fj_tk += ti;
@@ -1444,8 +1359,8 @@
         if (!zd.a) {
           continue;
         }
-        for (var fi in tankes) {
-          fj = tankes[fi];
+        for (var fi in tanks) {
+          fj = tanks[fi];
           if (fj.h <= 0 || fi == zd.fid) {
             continue;
           }
@@ -1481,7 +1396,7 @@
 
         if (zd.fj_tk) {
           for (k = 0; k < zd.fj_tk.length; k++) {
-            tk = tankes[zd.fj_tk[k]];
+            tk = tanks[zd.fj_tk[k]];
             if (!tk || tk.h <= 0) {
               continue;
             }
@@ -1491,8 +1406,8 @@
               if (tk.h <= 0) {
                 main.send("k" + zd.fid + tk.id);
                 tk.a = false;
-                if (tankes[zd.fid]) {
-                  tankes[zd.fid].kill++;
+                if (tanks[zd.fid]) {
+                  tanks[zd.fid].kill++;
                 }
               } else {
                 main.send("j" + zd.fid + tk.id + String.fromCharCode(tk.h));
@@ -1502,8 +1417,8 @@
           }
         }
 
-        //for (var ti in tankes) {
-        //    fj = tankes[ti];
+        //for (var ti in tanks) {
+        //    fj = tanks[ti];
         //    if (fj.h <= 0 || ti == zd.fid) {
         //        continue;
         //    }
@@ -1513,8 +1428,8 @@
         //        if (fj.h <= 0 ) {
         //            main.send("k" + zd.fid + fj.id);
         //            fj.a = false;
-        //            if (tankes[zd.fid]) {
-        //                tankes[zd.fid].kill++;
+        //            if (tanks[zd.fid]) {
+        //                tanks[zd.fid].kill++;
         //            }
         //        } else {
         //            main.send("j" + zd.fid + fj.id + String.fromCharCode(fj.h));
@@ -1596,7 +1511,8 @@
     this.mt_pst = { x: 0, y: 0 };    //途经点模式的目标坐标
     this.mt_t = 0;           //途径点模式的到达目标时间
 
-    this.p = data.p != undefined ? data.p : 0;   //炮口方向
+    // this.p = data.p != undefined ? data.p : 0;   //炮口方向
+    this.p = this.r;   //炮口方向
     this.c_p = this.p + 1;  //model的炮口方向过渡
     this.v_p = tools.deg2vector(this.p);    //坦克的炮塔方向的向量 主要用于向量和
     this.v = data.v || dft_speed;   //速度       0-63;
@@ -1630,7 +1546,7 @@
     this.setR(this.r);
 
     Tank.remove(this.id);
-    tankes[this.id] = this;
+    tanks[this.id] = this;
     if (this.id == my_id) {
       my_tank = this;
       this.n = pageData.userName;
@@ -1643,10 +1559,6 @@
       this.v_v.x = this.v_v.y = 0;
     } else
       tools.deg2vector(this.r, this.v_v);
-  };
-  Tank.prototype.setP = function (p) {    //设置自己的炮口方向
-    this.p = p;
-    tools.deg2vector(this.p, this.v_p);
   };
   Tank.prototype.addGUN = function (gunstr) { //拾取枪的时候，计算下一把是啥枪
     var gid = this.gun;
@@ -1731,7 +1643,7 @@
     if (this.model) {
       this.model.destroy({ children: true });
     }
-    delete tankes[this.id];
+    delete tanks[this.id];
     if (game_env == 1) {
       ids.free(this.id);
     }
@@ -1739,8 +1651,8 @@
   Tank.prototype.add_fj = function () {   //算出附近的信息
     var tk, fj_ds = Tank.fj_ds;
     var wt, jp;
-    for (var ti in tankes) {
-      tk = tankes[ti];
+    for (var ti in tanks) {
+      tk = tanks[ti];
       if (Math.abs(tk.x - this.x) < fj_ds && Math.abs(tk.y - this.y) < fj_ds && ti != this.id) {
         tk.fj_tk += this.id;
         this.fj_tk += ti;
@@ -1766,7 +1678,7 @@
     return new Tank(data);
   };
   Tank.getMoveStr = function (tkid, r) {
-    var tk = tankes[tkid];
+    var tk = tanks[tkid];
     if (tk) {
       return tk.getMoveStr(r);
     }
@@ -1781,7 +1693,7 @@
     r = r >> 6;
 
 
-    var tk = tankes[id];
+    var tk = tanks[id];
     if (tk) {
       tk.v = v;
       if (r == 0) {
@@ -1800,7 +1712,7 @@
     return false;
   };
   Tank.getZipStr = function (id) {
-    var tk = tankes[id];
+    var tk = tanks[id];
     if (tk) {
       return tk.getZipStr();
     }
@@ -1821,7 +1733,7 @@
     data.r = data.r >> 6;
     if (game_env == 0) {
       setTimeout(function () {
-        if (tankes[data.id])
+        if (tanks[data.id])
           socket.emit("n", data.id);
       }, 1000);
     }
@@ -1839,18 +1751,18 @@
     }
   };
   Tank.remove = function (tkid) {
-    var tk = tankes[tkid];
+    var tk = tanks[tkid];
     if (tk) {
       tk.remove();
     }
   };
   Tank.clear = function () {
-    for (var ti in tankes) {
-      tankes[ti].remove();
+    for (var ti in tanks) {
+      tanks[ti].remove();
     }
   };
   Tank.setGUN = function (tkid, guncode) {
-    var tk = tankes[tkid];
+    var tk = tanks[tkid];
     if (tk) {
       tk.setGUN(guncode);
     }
@@ -1890,7 +1802,7 @@
     };
   })();
   Tank.setFireState = function (tkid, f) {
-    var tk = tankes[tkid];
+    var tk = tanks[tkid];
     if (tk) {
       tk.setF(f);
     }
@@ -1916,8 +1828,8 @@
   })();
   Tank.tickFire = function (time) {
     var tk, i, fires, fri, fx, fy, fc;
-    for (var ti in tankes) {
-      tk = tankes[ti];
+    for (var ti in tanks) {
+      tk = tanks[ti];
       if (tk.h <= 0 || !tk.f) {
         continue;
       }
@@ -1936,10 +1848,13 @@
         if (time >= fc.f_t) {
           fc.f_t = time - ((time - fc.f_t) % fc.tt) + fc.tt;
 
-          if (fc.fr != tk.p) {
-            fc.fr = tk.p;
-            fc.fx = fc.tx * tk.v_p.x - fc.ty * tk.v_p.y;
-            fc.fy = fc.tx * tk.v_p.y + fc.ty * tk.v_p.x;
+          // if (fc.fr != tk.p) {
+          if (fc.fr != tk.r) {
+            fc.fr = tk.r;
+            // fc.fx = fc.tx * tk.v_p.x - fc.ty * tk.v_p.y;
+            // fc.fy = fc.tx * tk.v_p.y + fc.ty * tk.v_p.x;
+            fc.fx = fc.tx * tk.v_v.x - fc.ty * tk.v_v.y;
+            fc.fy = fc.tx * tk.v_v.y + fc.ty * tk.v_v.x;
           }
 
           fx = fc.fx + tk.x;
@@ -1950,7 +1865,7 @@
               fid: tk.id,
               x: fx,
               y: fy,
-              r: tk.p + fc.tr,
+              r: tk.r + fc.tr,
               k: fc.k || 1,
               t: fc.ct || 1000, //持续时间
               v: fc.v || 40,
@@ -1964,7 +1879,7 @@
               fid: tk.id,
               x: fx,
               y: fy,
-              r: tk.p + fc.tr,
+              r: tk.r + fc.tr,
               k: fc.k || 1,
               t: fc.ct || 1000, //持续时间
               v: fc.v || 40,
@@ -2035,8 +1950,8 @@
     var stime, tk, fx, fy;
     var width = game_width + 100;
     var height = game_height + 100;
-    for (var ti in tankes) {
-      tk = tankes[ti];
+    for (var ti in tanks) {
+      tk = tanks[ti];
       if (!tk.a) {
         tk.remove();
         continue;
@@ -2075,8 +1990,8 @@
   };
   Tank.tickMainMove = function (now_time) {
     var stime, tk;
-    for (var ti in tankes) {
-      tk = tankes[ti];
+    for (var ti in tanks) {
+      tk = tanks[ti];
       if (!tk.a) {
         tk.remove();
         continue;
@@ -2091,7 +2006,7 @@
   };
   Tank.tickAI = function (time) {
     //return;
-    //var myfeiji = tankes[my_id];
+    //var myfeiji = tanks[my_id];
     //if (myfeiji && myfeiji.a) {
 
     //    var n_pst = tools.deg2vector(myfeiji.r);
@@ -2111,8 +2026,8 @@
     //var width = game_width + 100;
     //var height = game_height + 100;
     var juli = Infinity, zuijin = null, njuli;
-    for (var ti in tankes) {
-      tk = tankes[ti];
+    for (var ti in tanks) {
+      tk = tanks[ti];
       if (!tk.a) {
         tk.remove();
         continue;
@@ -2152,18 +2067,18 @@
   Tank.fj_dswj = 800;
   Tank.tick_fj = function () {
     var tk, tk2, tkeys, fj_ds = Tank.fj_ds;
-    tkeys = Object.keys(tankes);
+    tkeys = Object.keys(tanks);
     var t_1 = tkeys.length - 1;
-    for (var ti in tankes) {
-      tk = tankes[ti];
+    for (var ti in tanks) {
+      tk = tanks[ti];
       tk.fj_tk = "";
       tk.fj_wt = "";
       tk.fj_jp = "";
     }
     for (var i = 0; i < t_1; i++) {
-      tk = tankes[tkeys[i]];
+      tk = tanks[tkeys[i]];
       for (var j = i + 1; j < tkeys.length; j++) {
-        tk2 = tankes[tkeys[j]];
+        tk2 = tanks[tkeys[j]];
         if (Math.abs(tk.x - tk2.x) < fj_ds && Math.abs(tk.y - tk2.y) < fj_ds) {
           tk.fj_tk += tkeys[j];
           tk2.fj_tk += tkeys[i];
@@ -2175,8 +2090,8 @@
     for (var wi in wutis) {
       wt = wutis[wi];
       wt.fj_tk = "";
-      for (var ti in tankes) {
-        tk = tankes[ti];
+      for (var ti in tanks) {
+        tk = tanks[ti];
         if (Math.abs(tk.x - wt.x) < fj_ds && Math.abs(tk.y - wt.y) < fj_ds) {
           wt.fj_tk += ti;
           tk.fj_wt += wi;
@@ -2187,8 +2102,8 @@
     for (var ji in jiangpins) {
       jp = jiangpins[ji];
       jp.fj_tk = "";
-      for (var ti in tankes) {
-        tk = tankes[ti];
+      for (var ti in tanks) {
+        tk = tanks[ti];
         if (Math.abs(tk.x - jp.x) < fj_ds && Math.abs(tk.y - jp.y) < fj_ds) {
           jp.fj_tk += ti;
           tk.fj_jp += ji;
@@ -2286,7 +2201,7 @@
       if (game_env == 0) {
         var fid = data[1];
         var h = data.charCodeAt(2);
-        var fj = tankes[fid];
+        var fj = tanks[fid];
         if (fj) {
           fj.h = h;
           if (game_env == 0 && fid == my_id) {
@@ -2300,7 +2215,7 @@
         var yid = data[0];
         var fid = data[1];
         var kname;
-        var fj = tankes[fid];
+        var fj = tanks[fid];
 
         if (fj) {
           fj.h = 0;
@@ -2318,7 +2233,7 @@
       }
     },
     m: function (data) {    //移动指令
-      var fj = tankes[data.substr(0, 1)];
+      var fj = tanks[data.substr(0, 1)];
       if (fj) {
         Tank.loadMoveStr(data);
       } else {
@@ -2331,18 +2246,12 @@
     n: function (data) {       //服务器返回的用户名称
       var id = data[0];
       var name = data.substr(1);
-      if (tankes[id]) {
-        tankes[id].n = name;
-      }
-    },
-    p: function (data) {    //服务器发送过来的用户的炮口方向信息
-      var fj = tankes[data[0]];
-      if (fj) {
-        fj.setP(data.charCodeAt(1));
+      if (tanks[id]) {
+        tanks[id].n = name;
       }
     },
     r: function (data) {    //转向指令  暂时弃用
-      var fj = tankes[data[0]];
+      var fj = tanks[data[0]];
       if (fj) {
         fj.setR(data.charCodeAt(1));
       } else {
@@ -2357,7 +2266,7 @@
       var tid = data[0];
       var gid = data.charCodeAt(1);
       var gold = data.charCodeAt(2);
-      var tk = tankes[tid];
+      var tk = tanks[tid];
       if (tk) {
         tk.setGUN(gid);
         tk.setGold(gold);
@@ -2488,8 +2397,8 @@
     var wuticont = new PIXI.Container();
     stage.addChild(wuticont);
 
-    var tankecont = new PIXI.Container();
-    stage.addChild(tankecont);
+    var tankcont = new PIXI.Container();
+    stage.addChild(tankcont);
 
     var zidancont = new PIXI.Container();
     stage.addChild(zidancont);
@@ -2550,8 +2459,8 @@
         //敌军
         bindthing.lineStyle(1, 0xff0000, 0.4);
         bindthing.beginFill(0xff3333, 0.6);
-        for (var ti in tankes) {
-          tk = tankes[ti];
+        for (var ti in tanks) {
+          tk = tanks[ti];
           bindthing.drawCircle(tk.x * map_scale + base_x, tk.y * map_scale + base_y, 2);
         }
         bindthing.endFill();
@@ -2661,11 +2570,11 @@
       }
 
 
-      for (var fi in tankes) {
-        fj = tankes[fi];
+      for (var fi in tanks) {
+        fj = tanks[fi];
         if (!fj.model) {
           fj.model = new PIXI.Container();
-          tankecont.addChild(fj.model);
+          tankcont.addChild(fj.model);
 
           fj.body = new PIXI.Sprite(textures["fj" + fj.skin]);
           fj.body.anchor.set(0.5, 0.5);
@@ -2674,11 +2583,11 @@
           fj.model.addChild(fj.graphi);
         }
 
-        if (!fj.paota) {
-          fj.paota = new PIXI.Sprite(textures[GUNS[fj.gun].p]);
-          fj.paota.anchor.set(0.5, 0.5);
-          fj.model.addChild(fj.paota);
-        }
+        // if (!fj.paota) {
+        //   fj.paota = new PIXI.Sprite(textures[GUNS[fj.gun].p]);
+        //   fj.paota.anchor.set(0.5, 0.5);
+        //   fj.model.addChild(fj.paota);
+        // }
 
         if (!fj.n_model && fj.n) {
           var nmodel = new PIXI.Text(fj.n, {
@@ -2718,7 +2627,7 @@
           }
           t_p = fj.p - fj.c_p;
           fj.c_p += t_p / 6;
-          fj.paota.rotation = Math.PI * fj.c_p / 180;
+          // fj.paota.rotation = Math.PI * fj.c_p / 180;
         }
 
         //绘制 生命条
@@ -2869,15 +2778,11 @@
         } else {
           updateKeyState(1);
         }
-        if (e.which == 13 && pageData.sysstate == 2) {
-          js_chat_input.focus();
-        }
-
       });
 
-      canvas_div.addEventListener("touchstart", pagemousemove);
-      canvas_div.addEventListener("touchmove", pagemousemove);
-      canvas_div.addEventListener("mousemove", pagemousemove);
+      // canvas_div.addEventListener("touchstart", pagemousemove);
+      // canvas_div.addEventListener("touchmove", pagemousemove);
+      // canvas_div.addEventListener("mousemove", pagemousemove);
 
       canvas_div.addEventListener("mousedown", gameMouseEvent);
       canvas_div.addEventListener("mouseup", gameMouseEvent);

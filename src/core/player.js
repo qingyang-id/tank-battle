@@ -1,0 +1,74 @@
+/**
+ * @description 玩家
+ * @author yq
+ * @date 2019-07-31 15:50
+ */
+class Player {
+  /**
+   * startX: x坐标开始点
+   * startY: y坐标开始点
+   * angle: 角度
+   * name: 名称
+   */
+  constructor(attrs) {
+    this.speed = 0;
+    this.loadingProgress = 0;
+    this.setAttrs(attrs);
+  }
+
+  getX() {
+    return this.x;
+  }
+
+  getY() {
+    return this.y;
+  }
+
+  setX(x) {
+    this.x = x;
+  }
+
+  setY(y) {
+    this.y = y;
+  }
+
+  setLoadingProgress(progress) {
+    this.loadingProgress = progress;
+  }
+
+  getAngle() {
+    return this.angle;
+  }
+
+  setAngle(angle) {
+    this.angle = angle;
+  }
+
+  getSpeed() {
+    return this.speed;
+  }
+
+  setSpeed(speed) {
+    this.speed = speed;
+  }
+
+  getName() {
+    return this.name;
+  }
+
+  setName(name) {
+    this.name = name;
+  }
+
+  setAttrs(attrs) {
+    Object.keys(attrs).forEach((key) => {
+      this[key] = attrs[key];
+    });
+  }
+
+  ready(){
+    return this.loadingProgress >= 100;
+  }
+}
+
+module.exports = Player;

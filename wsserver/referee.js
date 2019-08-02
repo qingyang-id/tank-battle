@@ -35,8 +35,8 @@ function paimin_sortfun(a, b) {
 
 function paimin_sort(data) {
   var sst = [], tk;
-  for (var ti in tankes) {
-    tk = tankes[ti];
+  for (var ti in tanks) {
+    tk = tanks[ti];
     if (tk.a) {
       sst.push(tk);
     }
